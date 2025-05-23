@@ -1,6 +1,7 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
+const express = require('express');  // Add express
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
@@ -32,17 +33,17 @@ bot.on('callback_query', async (query) => {
 
   try {
     const response = await axios.post(
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-  {
-    contents: [{ parts: [{ text: prompt }] }]
-  },
-  {
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': process.env.GEMINI_API_KEY
-    }
-  }
-);
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+      {
+        contents: [{ parts: [{ text: prompt }] }]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': process.env.GEMINI_API_KEY
+        }
+      }
+    );
 
     const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || 'No songs found.';
     bot.sendMessage(chatId, `Here are your Nipsey Hussle tracks:\n\n${text}`);
@@ -50,4 +51,16 @@ bot.on('callback_query', async (query) => {
     console.error(error.response?.data || error.message);
     bot.sendMessage(chatId, 'Sorry, there was an error fetching the songs.');
   }
+});
+
+// === ADD THIS EXPRESS SERVER AT THE END ===
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('Bot is alive!');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
